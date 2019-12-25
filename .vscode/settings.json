@@ -1,0 +1,6 @@
+{
+	"files.associations": {
+		"wifi_network.h": "c",
+		"user_config.h": "c"
+	}
+}
