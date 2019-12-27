@@ -4,6 +4,9 @@
 struct espconn esp_update, esp;
 ip_addr_t ipaddr, ip_update;
 esp_tcp tcp_update;
+extern os_timer_t dweet_timer;
+// char received_data_buffer[200];
+// char received_data_buffer_pointer = 0;
 
 /*
  * Function called every 5 seconds in order to check for new settings
@@ -37,6 +40,7 @@ void dweet_dns_found_callback(const char *name, ip_addr_t *ipaddr, void *callbac
 		os_memcpy(esp_temp->proto.tcp->remote_ip, &ipaddr->addr, 4);
 		espconn_regist_connectcb(esp_temp, dweet_connect_callback);
 		espconn_regist_recvcb(esp_temp, dweet_receive_callback);
+		// espconn_regist_disconcb(esp_temp, dweet_disconnect_callback);
 		espconn_connect(esp_temp);
 	}
 }
@@ -50,8 +54,10 @@ void dweet_dns_found_callback(const char *name, ip_addr_t *ipaddr, void *callbac
 void dweet_connect_callback(void * arg)
 {
 	struct espconn * esp_temp = (struct espconn *)arg;
-	uint8 *buffer = (uint8 *)os_zalloc(100);
-	os_sprintf(buffer, "GET %s HTTP/1.1\nHost: %s\nUser-Agent: wget\n\nConnection: close\n\n", SUBDIR, HOSTNAME);
+	uint8 *buffer = (uint8 *)os_zalloc(200);
+	// os_printf("Sending request");
+	// os_sprintf(buffer, "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: wget\r\nConnection: close\r\n\r\n", SUBDIR, HOSTNAME);
+	// os_printf("%s", buffer);
 	espconn_send(esp_temp, buffer, os_strlen(buffer));
 	os_free(buffer);
 }
@@ -67,4 +73,5 @@ void dweet_connect_callback(void * arg)
 void dweet_receive_callback(void *arg, char *pdata, unsigned short len)
 {
 
+	// os_printf("Data received! %d\n%s\n", len,pdata);
 }

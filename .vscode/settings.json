@@ -1,6 +1,7 @@
 {
 	"files.associations": {
 		"wifi_network.h": "c",
-		"user_config.h": "c"
+		"user_config.h": "c",
+		"dweet.h": "c"
 	}
 }

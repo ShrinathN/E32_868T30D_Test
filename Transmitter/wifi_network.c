@@ -2,7 +2,7 @@
 #include "dweet.h"
 
 uint8 isConnected = 0;
-static os_timer_t dweet_timer;
+os_timer_t dweet_timer;
 
 void ICACHE_FLASH_ATTR conf_wifi()
 {
@@ -21,7 +21,7 @@ void ICACHE_FLASH_ATTR wifi_event_handler_callback(System_Event_t *event)
 	{
 		os_timer_disarm(&dweet_timer);
 		os_timer_setfn(&dweet_timer, dweet_entry, NULL);
-		os_timer_arm(&dweet_timer, 5000, 1);
+		os_timer_arm(&dweet_timer, 10000, 1);
 	}
 	else if(event->event == EVENT_STAMODE_DISCONNECTED) //disconnected from the AP
 	{
