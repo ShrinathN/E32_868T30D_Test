@@ -1,13 +1,8 @@
 #include "E32_868T30D.h"
 
-const U8 E32_868T30D_default_configuration[6] = {
-	0xc2,
-	0x00,
-	0x00,
-	0x1a,
-	0x17,
-	0x44
-};
+const U8 E32_868T30D_default_configuration[6] = { 0xc2, 0x00, 0x00, 0x1a, 0x17, 0x44};
+
+struct _E32_868T30D_Message_ E32_868T30D_Message;
 
 /*
  * Function to set mode

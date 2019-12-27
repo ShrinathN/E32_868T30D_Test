@@ -2,6 +2,13 @@
 	"files.associations": {
 		"wifi_network.h": "c",
 		"user_config.h": "c",
-		"dweet.h": "c"
-	}
+		"dweet.h": "c",
+		"jsontree.h": "c",
+		"e32_868t30d.h": "c"
+	},
+	"C_Cpp.default.systemIncludePath": [
+		"/opt/esp-open-sdk/",
+		"/opt/esp-open-sdk/sdk/include/",
+		"/opt/esp-open-sdk/sdk/driver_lib/include/driver/"
+	]
 }

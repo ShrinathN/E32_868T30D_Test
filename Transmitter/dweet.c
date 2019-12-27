@@ -1,12 +1,15 @@
 #include "dweet.h"
 #include "wifi_network.h"
+#include "E32_868T30D.h"
 
 struct espconn esp_update, esp;
 ip_addr_t ipaddr, ip_update;
 esp_tcp tcp_update;
+char payload_buffer[50];
+
+//external
 extern os_timer_t dweet_timer;
-// char received_data_buffer[200];
-// char received_data_buffer_pointer = 0;
+extern struct _E32_868T30D_Message_ E32_868T30D_Message;
 
 /*
  * Function called every 5 seconds in order to check for new settings
@@ -14,7 +17,7 @@ extern os_timer_t dweet_timer;
  * Called by the timer, this function basically looks up the hostname of dweet.io, and then proceeds to connect to it, and get the data regarding the E32 settings
  * @param (void*)arg none
 */
-void dweet_entry(void * arg)
+void ICACHE_FLASH_ATTR dweet_entry(void * arg)
 {
 	espconn_gethostbyname(&esp, HOSTNAME, &ipaddr, dweet_dns_found_callback);
 }
@@ -27,10 +30,11 @@ void dweet_entry(void * arg)
  * @param (ip_addr_t*)ipaddr is a pointer to a 4 byte long array of bytes which stores the IP address
  * @param (void*)callback_arg is a pointer to the calling espconn struct
 */
-void dweet_dns_found_callback(const char *name, ip_addr_t *ipaddr, void *callback_arg)
+void ICACHE_FLASH_ATTR dweet_dns_found_callback(const char *name, ip_addr_t *ipaddr, void *callback_arg)
 {
 	if(ipaddr != NULL)
 	{
+		// os_printf("Got Ip address"IPSTR, IP2STR(ipaddr->addr));
 		struct espconn * esp_temp = (struct espconn *)callback_arg;
 		esp_temp->state = ESPCONN_NONE;
 		esp_temp->type = ESPCONN_TCP;
@@ -51,12 +55,12 @@ void dweet_dns_found_callback(const char *name, ip_addr_t *ipaddr, void *callbac
  * Requests the JSON from the dweet.io page and server
  * @param (void*)arg is a pointer to the espconn structure passed by the calling function
 */
-void dweet_connect_callback(void * arg)
+void ICACHE_FLASH_ATTR dweet_connect_callback(void * arg)
 {
 	struct espconn * esp_temp = (struct espconn *)arg;
 	uint8 *buffer = (uint8 *)os_zalloc(200);
 	// os_printf("Sending request");
-	// os_sprintf(buffer, "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: wget\r\nConnection: close\r\n\r\n", SUBDIR, HOSTNAME);
+	os_sprintf(buffer, "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: wget\r\nConnection: close\r\n\r\n", SUBDIR, HOSTNAME);
 	// os_printf("%s", buffer);
 	espconn_send(esp_temp, buffer, os_strlen(buffer));
 	os_free(buffer);
@@ -70,8 +74,39 @@ void dweet_connect_callback(void * arg)
  * @param (char*)pdata is a pointer to the data received
  * @param (unsigned short)len length of the data received
 */
-void dweet_receive_callback(void *arg, char *pdata, unsigned short len)
+void ICACHE_FLASH_ATTR dweet_receive_callback(void *arg, char *pdata, unsigned short len)
 {
-
 	// os_printf("Data received! %d\n%s\n", len,pdata);
+	char * json_string_ptr = os_strstr(pdata, "{\"d0\"");
+	unsigned short length_of_json_string = os_strlen(json_string_ptr) - 4;
+	int jt = 0;
+	char tempmem[7], tempmem_counter = 0;
+
+	struct jsonparse_state * jps = (struct jsonparse_state *)os_zalloc(sizeof(struct jsonparse_state));
+	jsonparse_setup(jps, json_string_ptr, length_of_json_string);
+
+	while(jt = jsonparse_next(jps))
+	{
+		switch(jt)
+		{
+			case JSON_TYPE_NUMBER:
+				tempmem[tempmem_counter++] = jsonparse_get_value_as_int(jps);
+				break;
+			case JSON_TYPE_STRING:
+				jsonparse_copy_value(jps, payload_buffer, jsonparse_get_len(jps) + 1);
+				os_printf("Payload->%s\n", payload_buffer);
+				break;
+			default:
+				break;
+		}
+		if(jt == -2)
+			break;
+	}
+
+	// for(tempmem_counter = 0; tempmem_counter < 7; tempmem_counter++)
+	// {
+		// os_printf("%d -> %d\n", tempmem_counter, tempmem[tempmem_counter]);
+	// }
+
+	os_free(jps);
 }

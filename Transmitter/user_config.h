@@ -23,6 +23,8 @@
 #include "/opt/esp-open-sdk/sdk/include/user_interface.h"
 #include "/opt/esp-open-sdk/sdk/include/espconn.h"
 #include "/opt/esp-open-sdk/sdk/include/wpa2_enterprise.h"
+#include "json/jsonparse.h"
+#include "json/jsontree.h"
 //Driver Headers
 #include "/opt/esp-open-sdk/sdk/driver_lib/include/driver/gpio16.h"
 #include "/opt/esp-open-sdk/sdk/driver_lib/include/driver/i2c_master.h"

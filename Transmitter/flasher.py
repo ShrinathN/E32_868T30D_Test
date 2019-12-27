@@ -23,6 +23,7 @@ def flash():
 	b_flash['background'] = 'green'
 
 tintr = tkinter.Tk()
+tintr.title('ESP Flasher v1.3')
 b_make = tkinter.Button(tintr, background="green" , command=lambda : threading.Thread(target=make, args=()).start(), font=('',30), text='Make')
 b_make.pack()
 b_flash = tkinter.Button(tintr, background="green", command=lambda : threading.Thread(target=flash, args=()).start(), font=('',30), text='Flash')

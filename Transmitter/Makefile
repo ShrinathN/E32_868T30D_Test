@@ -1,6 +1,6 @@
 CC = xtensa-lx106-elf-gcc
-CFLAGS = -I. -I/opt/esp-open-sdk/sdk/driver_lib/include -mlongcalls
-LDLIBS = -nostdlib --stats -Wl,--start-group -lmain -ldriver -lnet80211 -lwpa -llwip -lpp -lphy -lc -Wl,--end-group -lgcc
+CFLAGS = -I. -I/opt/esp-open-sdk/sdk/driver_lib/include -I/opt/esp-open-sdk/sdk/include -mlongcalls -DICACHE_FLASH
+LDLIBS = -nostdlib --stats -Wl,--start-group -lmain -ljson -ldriver -lnet80211 -lwpa -llwip -lpp -lphy -lc -Wl,--end-group -lgcc
 LDFLAGS = -Teagle.app.v6.ld
 SRC = user_main.c \
 E32_868T30D.c \
