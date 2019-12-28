@@ -120,6 +120,7 @@ void ICACHE_FLASH_ATTR dweet_receive_callback(void *arg, char *pdata, unsigned s
 		E32_ModeSet(E32_MODE_SLEEP); //sleep mode
 		os_delay_us(10000); //10ms delay
 
+		//sending over the config parameters
 		os_printf("%c%c%c%c%c%c",
 		E32_868T30D_Message[0],
 		E32_868T30D_Message[1],
@@ -132,11 +133,12 @@ void ICACHE_FLASH_ATTR dweet_receive_callback(void *arg, char *pdata, unsigned s
 		os_delay_us(10000); //10ms delay again
 		E32_ModeSet(E32_MODE_NORMAL); //again in normal mode
 
+		//if timer is 0, disable the transmit timer
 		if(tempmem[7] == 0)
 		{
 			os_timer_disarm(&e32_transmit_timer);
 		}
-		else
+		else //unit of timer is 100ms, if time is non 0, start the timer
 		{
 			os_timer_setfn(&e32_transmit_timer, e32_transmit_function, NULL);
 			os_timer_arm(&e32_transmit_timer, tempmem[7] * 100, 1);
@@ -146,6 +148,5 @@ void ICACHE_FLASH_ATTR dweet_receive_callback(void *arg, char *pdata, unsigned s
 
 void ICACHE_FLASH_ATTR e32_transmit_function(void * arg)
 {
-
-	os_printf("%c");
+	os_printf("%s", payload_buffer);
 }
