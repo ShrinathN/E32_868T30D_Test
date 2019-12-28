@@ -6,13 +6,15 @@ struct espconn esp_update, esp;
 ip_addr_t ipaddr, ip_update;
 esp_tcp tcp_update;
 char payload_buffer[50];
+char char_config_update = 0;
 
 //external
 extern os_timer_t dweet_timer;
+os_timer_t e32_transmit_timer;
 extern struct _E32_868T30D_Message_ E32_868T30D_Message;
 
 /*
- * Function called every 5 seconds in order to check for new settings
+ * Function called every 10 seconds in order to check for new settings
  *
  * Called by the timer, this function basically looks up the hostname of dweet.io, and then proceeds to connect to it, and get the data regarding the E32 settings
  * @param (void*)arg none
@@ -80,11 +82,13 @@ void ICACHE_FLASH_ATTR dweet_receive_callback(void *arg, char *pdata, unsigned s
 	char * json_string_ptr = os_strstr(pdata, "{\"d0\"");
 	unsigned short length_of_json_string = os_strlen(json_string_ptr) - 4;
 	int jt = 0;
-	char tempmem[7], tempmem_counter = 0;
+	char tempmem[8]; //this stores the received numeric parameters. First 6 are E32 config parameters, 7th is token, 8th is timer
+	char tempmem_counter = 0;
 
 	struct jsonparse_state * jps = (struct jsonparse_state *)os_zalloc(sizeof(struct jsonparse_state));
 	jsonparse_setup(jps, json_string_ptr, length_of_json_string);
 
+	//getting all the parameters from the response
 	while(jt = jsonparse_next(jps))
 	{
 		switch(jt)
@@ -93,8 +97,9 @@ void ICACHE_FLASH_ATTR dweet_receive_callback(void *arg, char *pdata, unsigned s
 				tempmem[tempmem_counter++] = jsonparse_get_value_as_int(jps);
 				break;
 			case JSON_TYPE_STRING:
+				os_bzero(payload_buffer, 100);
 				jsonparse_copy_value(jps, payload_buffer, jsonparse_get_len(jps) + 1);
-				os_printf("Payload->%s\n", payload_buffer);
+				// os_printf("Payload->%s\n", payload_buffer);
 				break;
 			default:
 				break;
@@ -102,11 +107,45 @@ void ICACHE_FLASH_ATTR dweet_receive_callback(void *arg, char *pdata, unsigned s
 		if(jt == -2)
 			break;
 	}
-
-	// for(tempmem_counter = 0; tempmem_counter < 7; tempmem_counter++)
-	// {
-		// os_printf("%d -> %d\n", tempmem_counter, tempmem[tempmem_counter]);
-	// }
-
 	os_free(jps);
+
+	//if the update token is not the same as current token in memory
+	if(tempmem[6] != char_config_update)
+	{
+		os_timer_disarm(&e32_transmit_timer);
+
+		char_config_update = tempmem[6]; //set token as current
+		os_memcpy(&E32_868T30D_Message, tempmem, 6); //copying received setting as current setting
+
+		E32_ModeSet(E32_MODE_SLEEP); //sleep mode
+		os_delay_us(10000); //10ms delay
+
+		os_printf("%c%c%c%c%c%c",
+		E32_868T30D_Message[0],
+		E32_868T30D_Message[1],
+		E32_868T30D_Message[2],
+		E32_868T30D_Message[3],
+		E32_868T30D_Message[4],
+		E32_868T30D_Message[5]
+		);
+
+		os_delay_us(10000); //10ms delay again
+		E32_ModeSet(E32_MODE_NORMAL); //again in normal mode
+
+		if(tempmem[7] == 0)
+		{
+			os_timer_disarm(&e32_transmit_timer);
+		}
+		else
+		{
+			os_timer_setfn(&e32_transmit_timer, e32_transmit_function, NULL);
+			os_timer_arm(&e32_transmit_timer, tempmem[7] * 100, 1);
+		}
+	}
+}
+
+void ICACHE_FLASH_ATTR e32_transmit_function(void * arg)
+{
+
+	os_printf("%c");
 }
